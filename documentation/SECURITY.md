@@ -300,7 +300,7 @@ npm audit fix
 
 **Alert Destinations:**
 - Slack channel: #security-alerts
-- Email: security@youlend.com
+- Email: abdulyishawu333@gmail.com
 - PagerDuty for critical (future)
 
 ### Compliance
@@ -399,7 +399,7 @@ aws s3 ls
 ## Security Contact
 
 **Report Security Issues:**
-- Email: security@youlend.com
+- Email: abdulyishawu333@gmail.com
 - PGP Key: Available on request
 - Response SLA: 24 hours
 

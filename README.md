@@ -58,7 +58,7 @@ A comprehensive loan management system with a .NET backend API, Angular frontend
 - ALB for internet exposure
 - Prometheus + Grafana + Loki for observability
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed architecture.
+See [ARCHITECTURE.md](documentation/ARCHITECTURE.md) for detailed architecture.
 
 
 ## Business Rules
@@ -110,7 +110,7 @@ App available at: http://localhost:4200
 
 ### Deploy to AWS
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment guide.
+See [DEPLOYMENT.md](documentation/DEPLOYMENT.md) for complete deployment guide.
 
 **Quick deployment:**
 ```bash
@@ -238,7 +238,7 @@ npm test -- --code-coverage
 
 ## Security
 
-See [SECURITY.md](SECURITY.md) for security documentation.
+See [SECURITY.md](documentation/SECURITY.md) for security documentation.
 
 **Key Security Features:**
 - OIDC authentication (no AWS keys)
@@ -264,7 +264,7 @@ Default credentials: `admin` / `CHANGE_ME_SECURE_PASSWORD`
 - Kubernetes cluster overview
 - Node exporter metrics
 
-See [infrastructure/monitoring/README.md](infrastructure/monitoring/README.md)
+See [MONITORING.md](documentation/infrastructure/MONITORING.md)
 
 ## CI/CD
 
@@ -274,7 +274,7 @@ GitHub Actions workflows:
 - **On Merge to Main**: Build Docker images, Deploy to Dev, Terraform Apply
 - **Manual**: Deploy to Production (requires approval)
 
-See [.github/workflows/README.md](.github/workflows/README.md)
+See GitHub Actions workflows in [.github/workflows/](.github/workflows/)
 
 ## Contributing
 
@@ -290,16 +290,17 @@ This project is proprietary software owned by YouLend.
 
 ## Documentation
 
-- [Architecture Documentation](ARCHITECTURE.md)
-- [Deployment Guide](DEPLOYMENT.md)
-- [Security Documentation](SECURITY.md)
+- [Architecture Documentation](documentation/ARCHITECTURE.md)
+- [Deployment Guide](documentation/DEPLOYMENT.md)
+- [Security Documentation](documentation/SECURITY.md)
+- [Testing Guide](documentation/TESTING.md)
+- [Infrastructure Documentation](documentation/infrastructure/)
 - [API Documentation](http://localhost:8080/swagger) (when running)
-- [Changelog](CHANGELOG.md)
 
 ## Support
 
 For issues and questions:
-- **Email**: omar.din@youlend.com, charlotte.rodrigues@youlend.com
+- **Email**: abdulyishawu333@gmail.com
 - **GitHub Issues**: https://github.com/Hafizyishawu/youlend-loan-platform/issues
 
 ## Author

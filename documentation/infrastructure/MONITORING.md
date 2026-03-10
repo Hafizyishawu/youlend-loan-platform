@@ -266,10 +266,10 @@ alertmanager:
     receivers:
       - name: 'email'
         email_configs:
-          - to: 'alerts@youlend.com'
-            from: 'prometheus@youlend.com'
+          - to: 'abdulyishawu333@gmail.com'
+            from: 'abdulyishawu333@gmail.com'
             smarthost: 'smtp.gmail.com:587'
-            auth_username: 'prometheus@youlend.com'
+            auth_username: 'abdulyishawu333@gmail.com'
             auth_password: 'your-password'
 ```
 

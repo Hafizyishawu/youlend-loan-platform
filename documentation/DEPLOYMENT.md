@@ -343,4 +343,4 @@ For deployment issues:
 - Check logs: `kubectl logs -n youlend -l app=backend`
 - Check events: `kubectl get events -n youlend`
 - Review CloudTrail for AWS API errors
-- Contact: omar.din@youlend.com
+- Contact: abdulyishawu333@gmail.com
