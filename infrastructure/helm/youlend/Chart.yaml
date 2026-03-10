@@ -1,0 +1,25 @@
+apiVersion: v2
+name: youlend
+description: A Helm chart for YouLend Loan Management Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+
+keywords:
+  - youlend
+  - loan-management
+  - dotnet
+  - angular
+  - fintech
+
+home: https://github.com/Hafizyishawu/youlend-loan-platform
+sources:
+  - https://github.com/Hafizyishawu/youlend-loan-platform
+
+maintainers:
+  - name: Abdul Hafiz Yishawu
+    email: abdul@example.com
+
+icon: https://example.com/icon.png
+
+dependencies: []

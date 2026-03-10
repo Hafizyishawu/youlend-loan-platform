@@ -1,0 +1,200 @@
+# Prometheus Values for YouLend
+# Install: helm install prometheus prometheus-community/kube-prometheus-stack -f prometheus-values.yaml -n monitoring --create-namespace
+
+## Prometheus Operator Configuration
+prometheusOperator:
+  enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+## Prometheus Server Configuration
+prometheus:
+  enabled: true
+  
+  prometheusSpec:
+    replicas: 1
+    retention: 7d
+    
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+    
+    # Service monitors
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector: {}
+    
+    # Pod monitors
+    podMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelector: {}
+    
+    # Additional scrape configs
+    additionalScrapeConfigs:
+      - job_name: 'kubernetes-pods'
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+
+## Alertmanager Configuration
+alertmanager:
+  enabled: true
+  
+  alertmanagerSpec:
+    replicas: 1
+    
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+    
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 2Gi
+
+  config:
+    global:
+      resolve_timeout: 5m
+    
+    route:
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 12h
+      receiver: 'null'
+      routes:
+        - match:
+            alertname: Watchdog
+          receiver: 'null'
+        - match:
+            severity: critical
+          receiver: 'critical'
+        - match:
+            severity: warning
+          receiver: 'warning'
+    
+    receivers:
+      - name: 'null'
+      - name: 'critical'
+        # Add Slack/PagerDuty/Email configuration here
+      - name: 'warning'
+        # Add Slack/Email configuration here
+
+## Node Exporter
+nodeExporter:
+  enabled: true
+
+## Kube State Metrics
+kubeStateMetrics:
+  enabled: true
+
+## Default Rules
+defaultRules:
+  create: true
+  rules:
+    alertmanager: true
+    etcd: false
+    configReloaders: true
+    general: true
+    k8s: true
+    kubeApiserver: true
+    kubeApiserverAvailability: true
+    kubeApiserverSlos: true
+    kubelet: true
+    kubeProxy: true
+    kubePrometheusGeneral: true
+    kubePrometheusNodeRecording: true
+    kubernetesApps: true
+    kubernetesResources: true
+    kubernetesStorage: true
+    kubernetesSystem: true
+    kubeScheduler: true
+    kubeStateMetrics: true
+    network: true
+    node: true
+    nodeExporterAlerting: true
+    nodeExporterRecording: true
+    prometheus: true
+    prometheusOperator: true
+
+## Additional Prometheus Rules
+additionalPrometheusRulesMap:
+  youlend-rules:
+    groups:
+      - name: youlend-backend
+        rules:
+          - alert: BackendHighErrorRate
+            expr: rate(http_requests_total{job="backend",status=~"5.."}[5m]) > 0.05
+            for: 5m
+            labels:
+              severity: critical
+              component: backend
+            annotations:
+              summary: "High error rate in backend API"
+              description: "Backend is returning 5xx errors at {{ $value | humanizePercentage }} for the last 5 minutes"
+          
+          - alert: BackendHighLatency
+            expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="backend"}[5m])) > 1
+            for: 5m
+            labels:
+              severity: warning
+              component: backend
+            annotations:
+              summary: "Backend API latency is high"
+              description: "95th percentile latency is {{ $value }}s"
+          
+          - alert: BackendDown
+            expr: up{job="backend"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              component: backend
+            annotations:
+              summary: "Backend service is down"
+              description: "Backend has been down for more than 1 minute"
+      
+      - name: youlend-frontend
+        rules:
+          - alert: FrontendDown
+            expr: up{job="frontend"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              component: frontend
+            annotations:
+              summary: "Frontend service is down"
+              description: "Frontend has been down for more than 1 minute"

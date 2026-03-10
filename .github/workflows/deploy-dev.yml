@@ -1,0 +1,122 @@
+name: Deploy to Development
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'infrastructure/helm/**'
+      - 'infrastructure/k8s/**'
+  workflow_dispatch:
+
+jobs:
+  build-backend:
+    name: Build Backend Image
+    uses: ./.github/workflows/reusable-docker-build.yml
+    secrets: inherit
+    with:
+      service: backend
+      dockerfile-path: ./backend/Dockerfile
+      context: ./backend
+      ecr-repository: youlend-backend
+      image-tag: dev-${{ github.sha }}
+
+  build-frontend:
+    name: Build Frontend Image
+    uses: ./.github/workflows/reusable-docker-build.yml
+    secrets: inherit
+    with:
+      service: frontend
+      dockerfile-path: ./frontend/Dockerfile
+      context: ./frontend
+      ecr-repository: youlend-frontend
+      image-tag: dev-${{ github.sha }}
+
+  deploy:
+    name: Deploy to Development
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    environment:
+      name: development
+      url: https://dev.youlend.example.com
+    
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --name youlend-eks \
+            --region ${{ secrets.AWS_REGION }}
+      
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: '3.13.0'
+      
+      - name: Deploy with Helm
+        run: |
+          cd infrastructure/helm
+          
+          helm upgrade --install youlend ./youlend \
+            --namespace youlend \
+            --create-namespace \
+            --values ./youlend/values-dev.yaml \
+            --set backend.image.tag=dev-${{ github.sha }} \
+            --set frontend.image.tag=dev-${{ github.sha }} \
+            --set global.environment=development \
+            --wait \
+            --timeout 10m
+      
+      - name: Verify deployment
+        run: |
+          kubectl rollout status deployment/backend -n youlend --timeout=5m
+          kubectl rollout status deployment/frontend -n youlend --timeout=5m
+      
+      - name: Get deployment info
+        run: |
+          echo "### Deployment Info" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Pods:**" >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n youlend >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Services:**" >> $GITHUB_STEP_SUMMARY
+          kubectl get svc -n youlend >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Ingress:**" >> $GITHUB_STEP_SUMMARY
+          kubectl get ingress -n youlend >> $GITHUB_STEP_SUMMARY
+      
+      - name: Run smoke tests
+        run: |
+          # Wait for ingress to be ready
+          sleep 30
+          
+          # Get ingress URL
+          INGRESS_URL=$(kubectl get ingress youlend-ingress -n youlend -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          
+          # Test backend health
+          curl -f http://${INGRESS_URL}/health/live || exit 1
+          
+          # Test frontend
+          curl -f http://${INGRESS_URL}/ || exit 1
+          
+          echo "✓ Smoke tests passed"
+      
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Development deployment failed"
+          kubectl get events -n youlend --sort-by='.lastTimestamp'

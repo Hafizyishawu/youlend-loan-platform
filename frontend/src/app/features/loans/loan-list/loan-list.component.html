@@ -1,0 +1,108 @@
+<div class="loan-list-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Loan Management</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Search and Actions Bar -->
+      <div class="actions-bar">
+        <mat-form-field class="search-field" appearance="outline">
+          <mat-label>Search by Borrower Name</mat-label>
+          <input 
+            matInput 
+            [(ngModel)]="searchTerm" 
+            (keyup.enter)="searchLoans()"
+            placeholder="Enter borrower name">
+          <button 
+            mat-icon-button 
+            matSuffix 
+            *ngIf="searchTerm" 
+            (click)="clearSearch()">
+            <mat-icon>clear</mat-icon>
+          </button>
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" (click)="searchLoans()" class="search-btn">
+          <mat-icon>search</mat-icon>
+          Search
+        </button>
+
+        <button mat-raised-button color="accent" routerLink="/loans/create">
+          <mat-icon>add</mat-icon>
+          Create Loan
+        </button>
+      </div>
+
+      <!-- Loans Table -->
+      <div class="table-container">
+        <table mat-table [dataSource]="filteredLoans" class="loans-table">
+          <!-- Borrower Name Column -->
+          <ng-container matColumnDef="borrowerName">
+            <th mat-header-cell *matHeaderCellDef>Borrower Name</th>
+            <td mat-cell *matCellDef="let loan">{{ loan.borrowerName }}</td>
+          </ng-container>
+
+          <!-- Funding Amount Column -->
+          <ng-container matColumnDef="fundingAmount">
+            <th mat-header-cell *matHeaderCellDef>Funding Amount</th>
+            <td mat-cell *matCellDef="let loan">{{ loan.fundingAmount | currencyFormat }}</td>
+          </ng-container>
+
+          <!-- Repayment Amount Column -->
+          <ng-container matColumnDef="repaymentAmount">
+            <th mat-header-cell *matHeaderCellDef>Repayment Amount</th>
+            <td mat-cell *matCellDef="let loan">{{ loan.repaymentAmount | currencyFormat }}</td>
+          </ng-container>
+
+          <!-- Created At Column -->
+          <ng-container matColumnDef="createdAt">
+            <th mat-header-cell *matHeaderCellDef>Created Date</th>
+            <td mat-cell *matCellDef="let loan">{{ loan.createdAt | date:'short' }}</td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let loan">
+              <button 
+                mat-icon-button 
+                color="primary" 
+                [routerLink]="['/loans', loan.loanId]"
+                matTooltip="View Details">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button 
+                mat-icon-button 
+                color="accent" 
+                [routerLink]="['/loans', loan.loanId, 'edit']"
+                matTooltip="Edit">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button 
+                mat-icon-button 
+                color="warn" 
+                (click)="deleteLoan(loan)"
+                matTooltip="Delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+          <!-- No Data Row -->
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
+              <div class="no-data-content">
+                <mat-icon>info</mat-icon>
+                <p>No loans found. {{ searchTerm ? 'Try a different search.' : 'Create your first loan!' }}</p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

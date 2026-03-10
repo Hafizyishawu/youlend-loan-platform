@@ -1,0 +1,60 @@
+<div class="loan-edit-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Edit Loan</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="loanForm" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Borrower Name</mat-label>
+          <input matInput formControlName="borrowerName" placeholder="Enter borrower name">
+          <mat-icon matPrefix>person</mat-icon>
+          <mat-error *ngIf="submitted && f['borrowerName'].errors?.['required']">
+            Borrower name is required
+          </mat-error>
+          <mat-error *ngIf="submitted && f['borrowerName'].errors?.['maxlength']">
+            Borrower name cannot exceed 100 characters
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Funding Amount</mat-label>
+          <input matInput type="number" formControlName="fundingAmount" placeholder="Enter funding amount">
+          <span matPrefix>£&nbsp;</span>
+          <mat-icon matSuffix>account_balance</mat-icon>
+          <mat-error *ngIf="submitted && f['fundingAmount'].errors?.['required']">
+            Funding amount is required
+          </mat-error>
+          <mat-error *ngIf="submitted && f['fundingAmount'].errors?.['min']">
+            Funding amount must be greater than 0
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Repayment Amount</mat-label>
+          <input matInput type="number" formControlName="repaymentAmount" placeholder="Enter repayment amount">
+          <span matPrefix>£&nbsp;</span>
+          <mat-icon matSuffix>payments</mat-icon>
+          <mat-error *ngIf="submitted && f['repaymentAmount'].errors?.['required']">
+            Repayment amount is required
+          </mat-error>
+          <mat-error *ngIf="submitted && loanForm.errors?.['repaymentLessThanFunding']">
+            Repayment amount must be greater than or equal to funding amount
+          </mat-error>
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-raised-button type="button" (click)="onCancel()">
+            <mat-icon>cancel</mat-icon>
+            Cancel
+          </button>
+          <button mat-raised-button color="primary" type="submit">
+            <mat-icon>save</mat-icon>
+            Update Loan
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

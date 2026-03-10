@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: youlend
+  labels:
+    name: youlend
+    environment: production
+    project: youlend-loan-platform

@@ -1,0 +1,139 @@
+🎉 YouLend Loan Management Platform has been deployed!
+
+Release Name: {{ .Release.Name }}
+Namespace: {{ include "youlend.namespace" . }}
+Environment: {{ .Values.global.environment }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📦 DEPLOYED COMPONENTS:
+
+{{- if .Values.backend.enabled }}
+✓ Backend API
+  - Replicas: {{ .Values.backend.replicaCount }}
+  {{- if .Values.backend.autoscaling.enabled }}
+  - Autoscaling: {{ .Values.backend.autoscaling.minReplicas }}-{{ .Values.backend.autoscaling.maxReplicas }} replicas
+  {{- end }}
+  - Image: {{ include "youlend.backend.image" . }}
+{{- end }}
+
+{{- if .Values.frontend.enabled }}
+✓ Frontend SPA
+  - Replicas: {{ .Values.frontend.replicaCount }}
+  {{- if .Values.frontend.autoscaling.enabled }}
+  - Autoscaling: {{ .Values.frontend.autoscaling.minReplicas }}-{{ .Values.frontend.autoscaling.maxReplicas }} replicas
+  {{- end }}
+  - Image: {{ include "youlend.frontend.image" . }}
+{{- end }}
+
+{{- if .Values.ingress.enabled }}
+✓ Ingress (ALB)
+{{- end }}
+
+{{- if .Values.networkPolicy.enabled }}
+✓ Network Policies
+{{- end }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 CHECK DEPLOYMENT STATUS:
+
+  # View all resources
+  kubectl get all -n {{ include "youlend.namespace" . }}
+
+  # Check pod status
+  kubectl get pods -n {{ include "youlend.namespace" . }}
+
+  # Watch deployment rollout
+  kubectl rollout status deployment/backend -n {{ include "youlend.namespace" . }}
+  kubectl rollout status deployment/frontend -n {{ include "youlend.namespace" . }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{{- if .Values.ingress.enabled }}
+🌐 ACCESS YOUR APPLICATION:
+
+  # Get the ALB URL
+  kubectl get ingress youlend-ingress -n {{ include "youlend.namespace" . }}
+
+  # Or use this command:
+  export ALB_URL=$(kubectl get ingress youlend-ingress -n {{ include "youlend.namespace" . }} -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+  echo "Application URL: http://$ALB_URL"
+
+  {{- if .Values.ingress.certificateArn }}
+  # HTTPS is configured - use:
+  echo "Application URL: https://$ALB_URL"
+  {{- end }}
+
+{{- end }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 MONITORING:
+
+  # View logs
+  kubectl logs -n {{ include "youlend.namespace" . }} -l app=backend --tail=50
+  kubectl logs -n {{ include "youlend.namespace" . }} -l app=frontend --tail=50
+
+  # Follow logs in real-time
+  kubectl logs -n {{ include "youlend.namespace" . }} -l app=backend -f
+
+{{- if .Values.backend.autoscaling.enabled }}
+  # Check HPA status
+  kubectl get hpa -n {{ include "youlend.namespace" . }}
+  kubectl describe hpa backend -n {{ include "youlend.namespace" . }}
+{{- end }}
+
+  # Check resource usage
+  kubectl top pods -n {{ include "youlend.namespace" . }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 COMMON OPERATIONS:
+
+  # Update the deployment with new image
+  helm upgrade {{ .Release.Name }} ./youlend --set backend.image.tag=v1.1.0
+
+  # Switch to dev environment
+  helm upgrade {{ .Release.Name }} ./youlend -f values-dev.yaml
+
+  # Rollback to previous version
+  helm rollback {{ .Release.Name }}
+
+  # Uninstall the release
+  helm uninstall {{ .Release.Name }} -n {{ include "youlend.namespace" . }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  IMPORTANT REMINDERS:
+
+{{- if eq .Values.secrets.auth0.domain "YOUR_AUTH0_DOMAIN" }}
+  ⚠️  UPDATE AUTH0 CREDENTIALS!
+  The secrets contain placeholder values. Update them with:
+  
+  helm upgrade {{ .Release.Name }} ./youlend \
+    --set secrets.auth0.domain=your-domain.auth0.com \
+    --set secrets.auth0.clientId=your-client-id
+{{- end }}
+
+{{- if not .Values.ingress.certificateArn }}
+  ℹ️  For HTTPS, add ACM certificate ARN:
+  
+  helm upgrade {{ .Release.Name }} ./youlend \
+    --set ingress.certificateArn=arn:aws:acm:REGION:ACCOUNT:certificate/CERT_ID
+{{- end }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📚 DOCUMENTATION:
+
+  Chart Repository: https://github.com/Hafizyishawu/youlend-loan-platform
+  Chart Version: {{ .Chart.Version }}
+  App Version: {{ .Chart.AppVersion }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+For more information, see the chart README:
+  https://github.com/Hafizyishawu/youlend-loan-platform/tree/main/infrastructure/helm
+
+Happy deploying! 🚀

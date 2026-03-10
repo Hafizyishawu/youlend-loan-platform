@@ -1,0 +1,215 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build-backend:
+    name: Build Backend Image
+    uses: ./.github/workflows/reusable-docker-build.yml
+    secrets: inherit
+    with:
+      service: backend
+      dockerfile-path: ./backend/Dockerfile
+      context: ./backend
+      ecr-repository: youlend-backend
+      image-tag: ${{ inputs.version }}
+
+  build-frontend:
+    name: Build Frontend Image
+    uses: ./.github/workflows/reusable-docker-build.yml
+    secrets: inherit
+    with:
+      service: frontend
+      dockerfile-path: ./frontend/Dockerfile
+      context: ./frontend
+      ecr-repository: youlend-frontend
+      image-tag: ${{ inputs.version }}
+
+  security-scan:
+    name: Security Scan
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    
+    permissions:
+      id-token: write
+      contents: read
+      security-events: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Scan backend image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ steps.login-ecr.outputs.registry }}/youlend-backend:${{ inputs.version }}'
+          format: 'sarif'
+          output: 'trivy-backend-prod.sarif'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Scan frontend image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ steps.login-ecr.outputs.registry }}/youlend-frontend:${{ inputs.version }}'
+          format: 'sarif'
+          output: 'trivy-frontend-prod.sarif'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Upload scan results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-backend-prod.sarif'
+      
+      - name: Fail on critical vulnerabilities
+        run: |
+          if grep -q '"level": "error"' trivy-backend-prod.sarif trivy-frontend-prod.sarif; then
+            echo "::error::Critical vulnerabilities found in production images"
+            exit 1
+          fi
+
+  deploy-production:
+    name: Deploy to Production
+    needs: [build-backend, build-frontend, security-scan]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://youlend.example.com
+    
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --name youlend-eks \
+            --region ${{ secrets.AWS_REGION }}
+      
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: '3.13.0'
+      
+      - name: Backup current deployment
+        run: |
+          mkdir -p backup
+          helm get values youlend -n youlend > backup/values-backup.yaml || true
+          kubectl get deployment backend -n youlend -o yaml > backup/backend-deployment.yaml || true
+          kubectl get deployment frontend -n youlend -o yaml > backup/frontend-deployment.yaml || true
+      
+      - name: Deploy with Helm
+        id: deploy
+        run: |
+          cd infrastructure/helm
+          
+          helm upgrade --install youlend ./youlend \
+            --namespace youlend \
+            --create-namespace \
+            --values ./youlend/values-prod.yaml \
+            --set backend.image.tag=${{ inputs.version }} \
+            --set frontend.image.tag=${{ inputs.version }} \
+            --set global.environment=production \
+            --wait \
+            --timeout 15m \
+            --atomic \
+            --cleanup-on-fail
+      
+      - name: Verify deployment
+        run: |
+          echo "Waiting for deployments to stabilize..."
+          kubectl rollout status deployment/backend -n youlend --timeout=10m
+          kubectl rollout status deployment/frontend -n youlend --timeout=10m
+          
+          echo "Checking pod health..."
+          kubectl wait --for=condition=ready pod -l app=backend -n youlend --timeout=5m
+          kubectl wait --for=condition=ready pod -l app=frontend -n youlend --timeout=5m
+      
+      - name: Run production smoke tests
+        run: |
+          # Wait for ingress propagation
+          sleep 60
+          
+          # Get ingress URL
+          INGRESS_URL=$(kubectl get ingress youlend-ingress -n youlend -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          echo "Testing: $INGRESS_URL"
+          
+          # Health checks
+          echo "Testing backend health..."
+          curl -f -m 30 http://${INGRESS_URL}/health/live || exit 1
+          curl -f -m 30 http://${INGRESS_URL}/health/ready || exit 1
+          
+          echo "Testing frontend..."
+          curl -f -m 30 http://${INGRESS_URL}/ || exit 1
+          
+          echo "Testing API endpoint..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${INGRESS_URL}/api/v1/loans)
+          if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "401" ]; then
+            echo "API endpoint returned unexpected status: $HTTP_CODE"
+            exit 1
+          fi
+          
+          echo "✓ All smoke tests passed"
+      
+      - name: Create deployment summary
+        run: |
+          echo "## 🚀 Production Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployed by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Time:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Resources" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          kubectl get all -n youlend >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Ingress" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          kubectl get ingress -n youlend >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Rollback on failure
+        if: failure() && steps.deploy.conclusion == 'failure'
+        run: |
+          echo "::error::Production deployment failed. Initiating rollback..."
+          helm rollback youlend -n youlend --wait --timeout=10m || true
+          
+          echo "## ⚠️ Deployment Failed - Rollback Initiated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The deployment was automatically rolled back to the previous version." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Recent Events:**" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          kubectl get events -n youlend --sort-by='.lastTimestamp' | tail -20 >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Notify deployment
+        if: success()
+        run: |
+          echo "::notice::Production deployment successful for version ${{ inputs.version }}"

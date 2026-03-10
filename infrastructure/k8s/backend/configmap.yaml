@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: youlend
+  labels:
+    app: backend
+data:
+  # Application settings
+  AllowedHosts: "*"
+  
+  # Logging configuration
+  Serilog__MinimumLevel__Default: "Information"
+  Serilog__MinimumLevel__Override__Microsoft: "Warning"
+  Serilog__MinimumLevel__Override__System: "Warning"
+  
+  # CORS origins (will be updated based on frontend URL)
+  CORS__AllowedOrigins: "https://youlend.example.com"

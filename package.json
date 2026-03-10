@@ -1,0 +1,59 @@
+{
+  "name": "youlend-loan-platform",
+  "version": "1.0.0",
+  "description": "YouLend Loan Management Platform - Production-ready loan management system",
+  "scripts": {
+    "setup": "./scripts/setup-env.sh",
+    "setup:demo": "./scripts/setup-demo.sh",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:demo": "concurrently \"npm run start:backend\" \"npm run start:frontend:demo\"",
+    "start:backend": "cd backend && dotnet run",
+    "start:frontend": "cd frontend && npm start",
+    "start:frontend:demo": "cd frontend && ng serve --configuration development",
+    "test": "concurrently \"npm run test:backend\" \"npm run test:frontend\"",
+    "test:backend": "cd backend && dotnet test",
+    "test:frontend": "cd frontend && npm test -- --watch=false --browsers=ChromeHeadless",
+    "build": "concurrently \"npm run build:backend\" \"npm run build:frontend\"",
+    "build:backend": "cd backend && dotnet build",
+    "build:frontend": "cd frontend && npm run build",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "clean": "concurrently \"npm run clean:backend\" \"npm run clean:frontend\"",
+    "clean:backend": "cd backend && dotnet clean",
+    "clean:frontend": "cd frontend && rm -rf node_modules dist .angular && npm install",
+    "deploy:dev": "cd infrastructure/helm && helm upgrade --install youlend ./youlend --namespace youlend --create-namespace -f values-dev.yaml",
+    "deploy:prod": "cd infrastructure/helm && helm upgrade --install youlend ./youlend --namespace youlend --create-namespace -f values-prod.yaml",
+    "lint": "cd frontend && npm run lint",
+    "format": "cd frontend && npx prettier --write src/**/*.{ts,html,scss}",
+    "check-ports": "npx kill-port 4200 5001"
+  },
+  "keywords": [
+    "loan-management",
+    "fintech",
+    "dotnet",
+    "angular",
+    "kubernetes",
+    "aws",
+    "devops",
+    "platform-engineering"
+  ],
+  "author": "Abdul Hafiz Yishawu",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@auth0/auth0-angular": "^2.7.0",
+    "concurrently": "^8.2.2"
+  },
+  "devDependencies": {
+    "kill-port": "^2.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hafizyishawu/youlend-loan-platform.git"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

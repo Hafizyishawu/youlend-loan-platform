@@ -1,0 +1,15 @@
+{{- if .Values.backend.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: {{ include "youlend.namespace" . }}
+  labels:
+    {{- include "youlend.backend.labels" . | nindent 4 }}
+data:
+  AllowedHosts: {{ .Values.backend.config.allowedHosts | quote }}
+  CORS__AllowedOrigins: {{ .Values.backend.config.corsOrigins | quote }}
+  Serilog__MinimumLevel__Default: {{ .Values.backend.config.serilog.minimumLevel | quote }}
+  Serilog__MinimumLevel__Override__Microsoft: "Warning"
+  Serilog__MinimumLevel__Override__System: "Warning"
+{{- end }}

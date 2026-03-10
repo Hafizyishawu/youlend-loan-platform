@@ -1,0 +1,25 @@
+<mat-toolbar color="primary">
+  <span>YouLend Loan Platform</span>
+  <span class="spacer"></span>
+  
+  <nav>
+    <a mat-button routerLink="/" routerLinkActive="active">Home</a>
+    <a mat-button routerLink="/loans" routerLinkActive="active">Loans</a>
+  </nav>
+  
+  <span class="spacer"></span>
+  
+  <div *ngIf="auth.isAuthenticated$ | async; else loggedOut">
+    <button mat-button (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      Logout
+    </button>
+  </div>
+  
+  <ng-template #loggedOut>
+    <button mat-button (click)="login()">
+      <mat-icon>login</mat-icon>
+      Login
+    </button>
+  </ng-template>
+</mat-toolbar>

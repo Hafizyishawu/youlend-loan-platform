@@ -1,0 +1,74 @@
+# Development environment overrides
+# Use with: helm install youlend ./youlend -f values-dev.yaml
+
+global:
+  environment: development
+
+# Backend - reduced resources for dev
+backend:
+  replicaCount: 1
+  
+  image:
+    tag: latest
+    pullPolicy: Always
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  
+  autoscaling:
+    enabled: false  # Disable HPA in dev
+  
+  env:
+    ASPNETCORE_ENVIRONMENT: Development
+  
+  config:
+    corsOrigins: "http://localhost:4200,http://localhost:3000"
+    serilog:
+      minimumLevel: Debug
+  
+  podDisruptionBudget:
+    enabled: false  # Not needed in dev
+
+# Frontend - reduced resources for dev
+frontend:
+  replicaCount: 1
+  
+  image:
+    tag: latest
+    pullPolicy: Always
+  
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+  
+  autoscaling:
+    enabled: false  # Disable HPA in dev
+  
+  podDisruptionBudget:
+    enabled: false  # Not needed in dev
+
+# Ingress - HTTP only for dev
+ingress:
+  enabled: true
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'  # HTTP only
+    # No SSL redirect in dev
+
+# Monitoring - optional in dev
+monitoring:
+  prometheus:
+    enabled: false
+
+commonLabels:
+  environment: development

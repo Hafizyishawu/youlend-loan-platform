@@ -1,0 +1,47 @@
+.loan-detail-container {
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+mat-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 0;
+
+  .label {
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .value {
+    font-weight: 400;
+    
+    &.highlight {
+      font-size: 18px;
+      font-weight: 600;
+      color: #3f51b5;
+    }
+  }
+}
+
+mat-card-actions {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+}
+
+@media (max-width: 600px) {
+  .loan-detail-container {
+    padding: 16px;
+  }
+
+  .detail-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+}

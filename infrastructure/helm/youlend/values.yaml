@@ -1,0 +1,212 @@
+# Default values for youlend (Production configuration)
+# This is a YAML-formatted file.
+
+# Global settings
+global:
+  namespace: youlend
+  environment: production
+
+# Image registry configuration
+image:
+  registry: YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
+  pullPolicy: Always
+  # Optionally specify imagePullSecrets
+  # pullSecrets:
+  #   - name: ecr-registry-secret
+
+# Backend configuration
+backend:
+  enabled: true
+  
+  image:
+    repository: YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/youlend-backend
+    tag: latest
+  
+  replicaCount: 1
+  
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8080
+  
+  health:
+    livenessProbe:
+      path: /health/live
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+    readinessProbe:
+      path: /health/ready
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+  
+  env:
+    ASPNETCORE_ENVIRONMENT: Production
+    ASPNETCORE_URLS: http://+:8080
+  
+  config:
+    allowedHosts: "*"
+    corsOrigins: "https://youlend.example.com"
+    serilog:
+      minimumLevel: Information
+  
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 2
+  
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop:
+        - ALL
+
+# Frontend configuration
+frontend:
+  enabled: true
+  
+  image:
+    repository: YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/youlend-frontend
+    tag: v3
+  
+  replicaCount: 3
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+  
+  health:
+    livenessProbe:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+    readinessProbe:
+      path: /health
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+  
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 2
+  
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+    fsGroup: 101
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '15'
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
+    alb.ingress.kubernetes.io/success-codes: '200'
+    alb.ingress.kubernetes.io/healthy-threshold-count: '2'
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=60,deletion_protection.enabled=false,http2.enabled=true
+    alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds=30,stickiness.enabled=true,stickiness.lb_cookie.duration_seconds=86400
+    alb.ingress.kubernetes.io/tags: Environment=Production,Project=YouLend,ManagedBy=Kubernetes
+  
+  # Uncomment and set your ACM certificate ARN for HTTPS
+  # certificateArn: "arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/CERT_ID"
+  
+  hosts:
+    - host: ""  # Leave empty for ALB DNS, or set custom domain
+      paths:
+        - path: /api
+          pathType: Prefix
+          backend: backend
+        - path: /health
+          pathType: Prefix
+          backend: backend
+        - path: /metrics
+          pathType: Prefix
+          backend: backend
+        - path: /
+          pathType: Prefix
+          backend: frontend
+
+# Network policies
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+
+# Secrets configuration
+secrets:
+  auth0:
+    domain: "YOUR_AUTH0_DOMAIN"
+    clientId: "YOUR_AUTH0_CLIENT_ID"
+    audience: "https://youlend-loan-api"
+
+# Monitoring
+monitoring:
+  prometheus:
+    enabled: true
+    scrape: true
+    port: 8080
+    path: /metrics
+
+# Additional labels to add to all resources
+commonLabels:
+  project: youlend-loan-platform
+  managed-by: helm
+
+# Pod affinity settings
+affinity:
+  podAntiAffinity:
+    enabled: true
+    weight: 100

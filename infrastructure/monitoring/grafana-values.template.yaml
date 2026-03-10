@@ -1,0 +1,99 @@
+# Grafana Helm values template
+# Copy this file to grafana-values.yaml and update passwords
+
+rbac:
+  create: true
+  pspEnabled: false
+
+adminUser: admin
+adminPassword: "CHANGE_ME_PLEASE"  # Replace with a secure password
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+
+# Ingress configuration (optional)
+ingress:
+  enabled: false
+  annotations: {}
+  hosts: []
+  tls: []
+
+# Persistence
+persistence:
+  type: pvc
+  enabled: true
+  size: 10Gi
+
+# Resources
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Dashboards
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      editable: true
+      options:
+        path: /var/lib/grafana/dashboards/default
+
+dashboards:
+  default:
+    kubernetes-cluster:
+      gnetId: 7249
+      revision: 1
+      datasource: Prometheus
+    node-exporter:
+      gnetId: 1860
+      revision: 27
+      datasource: Prometheus
+
+# Data sources
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus-server:80
+      access: proxy
+      isDefault: true
+    - name: Loki
+      type: loki
+      url: http://loki:3100
+      access: proxy
+
+# Grafana configuration
+grafana.ini:
+  server:
+    domain: localhost
+    root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
+    serve_from_sub_path: true
+  security:
+    admin_user: admin
+    # admin_password: "CHANGE_ME_PLEASE"
+  users:
+    allow_sign_up: false
+  auth.anonymous:
+    enabled: false
+  analytics:
+    reporting_enabled: false
+    check_for_updates: false
+
+# Instructions:
+# 1. Copy this file to grafana-values.yaml
+# 2. Change adminPassword to a secure password
+# 3. Update domain and root_url for your environment
+# 4. Configure ingress if needed

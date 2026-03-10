@@ -1,0 +1,60 @@
+<div class="loan-detail-container">
+  <mat-card *ngIf="loan">
+    <mat-card-header>
+      <mat-card-title>Loan Details</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="detail-row">
+        <span class="label">Loan ID:</span>
+        <span class="value">{{ loan.loanId }}</span>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="detail-row">
+        <span class="label">Borrower Name:</span>
+        <span class="value">{{ loan.borrowerName }}</span>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="detail-row">
+        <span class="label">Funding Amount:</span>
+        <span class="value highlight">{{ loan.fundingAmount | currencyFormat }}</span>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="detail-row">
+        <span class="label">Repayment Amount:</span>
+        <span class="value highlight">{{ loan.repaymentAmount | currencyFormat }}</span>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="detail-row">
+        <span class="label">Created Date:</span>
+        <span class="value">{{ loan.createdAt | date:'medium' }}</span>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="detail-row">
+        <span class="label">Last Updated:</span>
+        <span class="value">{{ loan.updatedAt | date:'medium' }}</span>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-raised-button (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+        Back to List
+      </button>
+      <button mat-raised-button color="primary" (click)="editLoan()">
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

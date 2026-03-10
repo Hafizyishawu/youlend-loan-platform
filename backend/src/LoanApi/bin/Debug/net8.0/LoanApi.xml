@@ -1,0 +1,332 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>LoanApi</name>
+    </assembly>
+    <members>
+        <member name="T:LoanApi.Controllers.LoansController">
+            <summary>
+            REST API controller for loan management
+            </summary>
+        </member>
+        <member name="M:LoanApi.Controllers.LoansController.CreateLoan(LoanApi.DTOs.CreateLoanRequest)">
+            <summary>
+            Creates a new loan
+            </summary>
+            <param name="request">Loan creation request</param>
+            <returns>Created loan</returns>
+            <response code="201">Loan created successfully</response>
+            <response code="400">Invalid request</response>
+        </member>
+        <member name="M:LoanApi.Controllers.LoansController.GetAllLoans">
+            <summary>
+            Gets all loans
+            </summary>
+            <returns>List of all loans</returns>
+            <response code="200">Loans retrieved successfully</response>
+        </member>
+        <member name="M:LoanApi.Controllers.LoansController.GetLoanById(System.Guid)">
+            <summary>
+            Gets a loan by ID
+            </summary>
+            <param name="id">Loan ID</param>
+            <returns>Loan details</returns>
+            <response code="200">Loan found</response>
+            <response code="404">Loan not found</response>
+        </member>
+        <member name="M:LoanApi.Controllers.LoansController.SearchLoansByBorrowerName(System.String)">
+            <summary>
+            Gets loans by borrower name (query parameter)
+            </summary>
+            <param name="borrowerName">Borrower name to search for</param>
+            <returns>List of loans for the borrower</returns>
+            <response code="200">Loans retrieved successfully</response>
+            <response code="400">Invalid borrower name</response>
+        </member>
+        <member name="M:LoanApi.Controllers.LoansController.UpdateLoan(System.Guid,LoanApi.DTOs.UpdateLoanRequest)">
+            <summary>
+            Updates an existing loan
+            </summary>
+            <param name="id">Loan ID</param>
+            <param name="request">Updated loan data</param>
+            <returns>Updated loan</returns>
+            <response code="200">Loan updated successfully</response>
+            <response code="404">Loan not found</response>
+            <response code="400">Invalid request</response>
+        </member>
+        <member name="M:LoanApi.Controllers.LoansController.DeleteLoan(System.Guid)">
+            <summary>
+            Deletes a loan
+            </summary>
+            <param name="id">Loan ID</param>
+            <returns>No content</returns>
+            <response code="204">Loan deleted successfully</response>
+            <response code="404">Loan not found</response>
+        </member>
+        <member name="T:LoanApi.DTOs.CreateLoanRequest">
+            <summary>
+            Request DTO for creating a new loan
+            </summary>
+        </member>
+        <member name="P:LoanApi.DTOs.CreateLoanRequest.BorrowerName">
+            <summary>
+            Name of the borrower (Required, 1-100 characters)
+            </summary>
+        </member>
+        <member name="P:LoanApi.DTOs.CreateLoanRequest.RepaymentAmount">
+            <summary>
+            Amount to be repaid by borrower (Must be positive)
+            </summary>
+        </member>
+        <member name="P:LoanApi.DTOs.CreateLoanRequest.FundingAmount">
+            <summary>
+            Amount funded to borrower (Must be positive)
+            </summary>
+        </member>
+        <member name="T:LoanApi.DTOs.ErrorResponse">
+            <summary>
+            Standardized error response DTO
+            </summary>
+        </member>
+        <member name="P:LoanApi.DTOs.ErrorResponse.Message">
+            <summary>
+            Error message
+            </summary>
+        </member>
+        <member name="P:LoanApi.DTOs.ErrorResponse.StatusCode">
+            <summary>
+            HTTP status code
+            </summary>
+        </member>
+        <member name="P:LoanApi.DTOs.ErrorResponse.CorrelationId">
+            <summary>
+            Correlation ID for tracking the request
+            </summary>
+        </member>
+        <member name="P:LoanApi.DTOs.ErrorResponse.Timestamp">
+            <summary>
+            Timestamp when the error occurred
+            </summary>
+        </member>
+        <member name="P:LoanApi.DTOs.ErrorResponse.ValidationErrors">
+            <summary>
+            Validation errors (if applicable)
+            </summary>
+        </member>
+        <member name="T:LoanApi.DTOs.LoanResponse">
+            <summary>
+            Response DTO for loan data
+            </summary>
+        </member>
+        <member name="P:LoanApi.DTOs.LoanResponse.LoanId">
+            <summary>
+            Unique identifier for the loan
+            </summary>
+        </member>
+        <member name="P:LoanApi.DTOs.LoanResponse.BorrowerName">
+            <summary>
+            Name of the borrower
+            </summary>
+        </member>
+        <member name="P:LoanApi.DTOs.LoanResponse.RepaymentAmount">
+            <summary>
+            Amount to be repaid by borrower
+            </summary>
+        </member>
+        <member name="P:LoanApi.DTOs.LoanResponse.FundingAmount">
+            <summary>
+            Amount funded to borrower
+            </summary>
+        </member>
+        <member name="P:LoanApi.DTOs.LoanResponse.CreatedAt">
+            <summary>
+            Date when the loan was created
+            </summary>
+        </member>
+        <member name="P:LoanApi.DTOs.LoanResponse.UpdatedAt">
+            <summary>
+            Date when the loan was last updated
+            </summary>
+        </member>
+        <member name="T:LoanApi.DTOs.UpdateLoanRequest">
+            <summary>
+            Request DTO for updating an existing loan
+            </summary>
+        </member>
+        <member name="P:LoanApi.DTOs.UpdateLoanRequest.BorrowerName">
+            <summary>
+            Name of the borrower (Required, 1-100 characters)
+            </summary>
+        </member>
+        <member name="P:LoanApi.DTOs.UpdateLoanRequest.RepaymentAmount">
+            <summary>
+            Amount to be repaid by borrower (Must be positive)
+            </summary>
+        </member>
+        <member name="P:LoanApi.DTOs.UpdateLoanRequest.FundingAmount">
+            <summary>
+            Amount funded to borrower (Must be positive)
+            </summary>
+        </member>
+        <member name="T:LoanApi.Extensions.ServiceCollectionExtensions">
+            <summary>
+            Extension methods for IServiceCollection
+            </summary>
+        </member>
+        <member name="M:LoanApi.Extensions.ServiceCollectionExtensions.AddApplicationServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Adds application services to the DI container
+            </summary>
+        </member>
+        <member name="M:LoanApi.Extensions.ServiceCollectionExtensions.AddValidators(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Adds FluentValidation validators
+            </summary>
+        </member>
+        <member name="M:LoanApi.Extensions.ServiceCollectionExtensions.AddCorsConfiguration(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Adds CORS configuration
+            </summary>
+        </member>
+        <member name="T:LoanApi.Middleware.ExceptionHandlingMiddleware">
+            <summary>
+            Global exception handling middleware
+            </summary>
+        </member>
+        <member name="T:LoanApi.Middleware.RequestLoggingMiddleware">
+            <summary>
+            Middleware for logging HTTP requests with correlation IDs and timing
+            </summary>
+        </member>
+        <member name="T:LoanApi.Models.Loan">
+            <summary>
+            Represents a loan in the system
+            </summary>
+        </member>
+        <member name="P:LoanApi.Models.Loan.LoanId">
+            <summary>
+            Unique identifier for the loan (GUID)
+            </summary>
+        </member>
+        <member name="P:LoanApi.Models.Loan.BorrowerName">
+            <summary>
+            Name of the borrower (Required)
+            </summary>
+        </member>
+        <member name="P:LoanApi.Models.Loan.RepaymentAmount">
+            <summary>
+            Amount to be repaid by borrower (Bonus requirement)
+            </summary>
+        </member>
+        <member name="P:LoanApi.Models.Loan.FundingAmount">
+            <summary>
+            Amount funded to borrower (Bonus requirement)
+            </summary>
+        </member>
+        <member name="P:LoanApi.Models.Loan.CreatedAt">
+            <summary>
+            Date when the loan was created
+            </summary>
+        </member>
+        <member name="P:LoanApi.Models.Loan.UpdatedAt">
+            <summary>
+            Date when the loan was last updated
+            </summary>
+        </member>
+        <member name="T:LoanApi.Repositories.ILoanRepository">
+            <summary>
+            Repository interface for loan data access
+            </summary>
+        </member>
+        <member name="M:LoanApi.Repositories.ILoanRepository.CreateAsync(LoanApi.Models.Loan)">
+            <summary>
+            Creates a new loan
+            </summary>
+        </member>
+        <member name="M:LoanApi.Repositories.ILoanRepository.GetByIdAsync(System.Guid)">
+            <summary>
+            Gets a loan by ID
+            </summary>
+        </member>
+        <member name="M:LoanApi.Repositories.ILoanRepository.GetAllAsync">
+            <summary>
+            Gets all loans
+            </summary>
+        </member>
+        <member name="M:LoanApi.Repositories.ILoanRepository.GetByBorrowerNameAsync(System.String)">
+            <summary>
+            Gets loans by borrower name
+            </summary>
+        </member>
+        <member name="M:LoanApi.Repositories.ILoanRepository.UpdateAsync(LoanApi.Models.Loan)">
+            <summary>
+            Updates an existing loan
+            </summary>
+        </member>
+        <member name="M:LoanApi.Repositories.ILoanRepository.DeleteAsync(System.Guid)">
+            <summary>
+            Deletes a loan by ID
+            </summary>
+        </member>
+        <member name="M:LoanApi.Repositories.ILoanRepository.ExistsAsync(System.Guid)">
+            <summary>
+            Checks if a loan exists
+            </summary>
+        </member>
+        <member name="T:LoanApi.Repositories.InMemoryLoanRepository">
+            <summary>
+            Thread-safe in-memory implementation of loan repository using ConcurrentDictionary
+            </summary>
+        </member>
+        <member name="T:LoanApi.Services.ILoanService">
+            <summary>
+            Service interface for loan business logic
+            </summary>
+        </member>
+        <member name="M:LoanApi.Services.ILoanService.CreateLoanAsync(LoanApi.DTOs.CreateLoanRequest)">
+            <summary>
+            Creates a new loan
+            </summary>
+        </member>
+        <member name="M:LoanApi.Services.ILoanService.GetLoanByIdAsync(System.Guid)">
+            <summary>
+            Gets a loan by ID
+            </summary>
+        </member>
+        <member name="M:LoanApi.Services.ILoanService.GetAllLoansAsync">
+            <summary>
+            Gets all loans
+            </summary>
+        </member>
+        <member name="M:LoanApi.Services.ILoanService.GetLoansByBorrowerNameAsync(System.String)">
+            <summary>
+            Gets loans by borrower name
+            </summary>
+        </member>
+        <member name="M:LoanApi.Services.ILoanService.UpdateLoanAsync(System.Guid,LoanApi.DTOs.UpdateLoanRequest)">
+            <summary>
+            Updates an existing loan
+            </summary>
+        </member>
+        <member name="M:LoanApi.Services.ILoanService.DeleteLoanAsync(System.Guid)">
+            <summary>
+            Deletes a loan
+            </summary>
+        </member>
+        <member name="T:LoanApi.Services.LoanService">
+            <summary>
+            Service implementation for loan business logic
+            </summary>
+        </member>
+        <member name="T:LoanApi.Validators.CreateLoanRequestValidator">
+            <summary>
+            Validator for CreateLoanRequest
+            </summary>
+        </member>
+        <member name="T:LoanApi.Validators.UpdateLoanRequestValidator">
+            <summary>
+            Validator for UpdateLoanRequest
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ include "youlend.namespace" . }}
+  labels:
+    {{- include "youlend.labels" . | nindent 4 }}
+    name: {{ include "youlend.namespace" . }}
+    environment: {{ .Values.global.environment }}

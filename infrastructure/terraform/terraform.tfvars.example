@@ -1,0 +1,37 @@
+# Example Terraform variables
+# Copy this file to terraform.tfvars and customize for your environment
+
+# General Configuration
+project_name    = "youlend"
+environment     = "production"
+aws_region      = "us-east-1"
+aws_profile     = "youlend"
+aws_account_id  = "YOUR_AWS_ACCOUNT_ID_HERE"
+
+# VPC Configuration
+vpc_cidr               = "10.0.0.0/16"
+availability_zones     = ["us-east-1a", "us-east-1b", "us-east-1c"]
+public_subnet_cidrs    = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+private_subnet_cidrs   = ["10.0.10.0/24", "10.0.11.0/24", "10.0.12.0/24"]
+enable_nat_gateway     = true
+single_nat_gateway     = false  # Set to true for cost savings in dev
+
+# EKS Configuration
+cluster_version      = "1.31"
+node_instance_types  = ["t3.medium"]
+node_desired_size    = 3
+node_min_size        = 3
+node_max_size        = 10
+node_disk_size       = 50
+
+# ECR Configuration
+ecr_repositories            = ["youlend-backend", "youlend-frontend"]
+ecr_image_tag_mutability    = "MUTABLE"
+ecr_scan_on_push            = true
+ecr_lifecycle_policy_count  = 10
+
+# Additional Tags
+additional_tags = {
+  CostCenter = "Engineering"
+  Owner      = "Platform Team"
+}

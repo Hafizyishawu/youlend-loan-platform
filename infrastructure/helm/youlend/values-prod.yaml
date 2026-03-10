@@ -1,0 +1,83 @@
+# Production environment overrides
+# Use with: helm install youlend ./youlend -f values-prod.yaml
+
+global:
+  environment: production
+
+# Backend - production settings
+backend:
+  replicaCount: 5  # Higher initial count for production
+  
+  image:
+    tag: v1.0.0  # Use specific version tag, not latest
+    pullPolicy: IfNotPresent
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 5  # Higher minimum for production
+    maxReplicas: 20  # Higher maximum for production
+    targetCPUUtilizationPercentage: 60  # Lower threshold for faster scaling
+    targetMemoryUtilizationPercentage: 70
+  
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 3  # Higher availability requirement
+
+# Frontend - production settings
+frontend:
+  replicaCount: 5
+  
+  image:
+    tag: v1.0.0  # Use specific version tag, not latest
+    pullPolicy: IfNotPresent
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 5
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 60
+    targetMemoryUtilizationPercentage: 70
+  
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 3
+
+# Ingress - production with HTTPS
+ingress:
+  enabled: true
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=60,deletion_protection.enabled=true,http2.enabled=true
+    alb.ingress.kubernetes.io/tags: Environment=Production,Project=YouLend,ManagedBy=Kubernetes,CostCenter=Engineering
+  
+  # Set your production certificate ARN
+  certificateArn: "arn:aws:acm:us-east-1:689393245150:certificate/YOUR-CERT-ID"
+  
+  hosts:
+    - host: youlend.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          backend: backend
+        - path: /health
+          pathType: Prefix
+          backend: backend
+        - path: /metrics
+          pathType: Prefix
+          backend: backend
+        - path: /
+          pathType: Prefix
+          backend: frontend
+
+# Monitoring - enabled in production
+monitoring:
+  prometheus:
+    enabled: true
+    scrape: true
+
+commonLabels:
+  environment: production
+  compliance: required

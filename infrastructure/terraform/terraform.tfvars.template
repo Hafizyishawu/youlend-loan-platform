@@ -1,0 +1,81 @@
+# YouLend Terraform Configuration Template
+# Copy this file to terraform.tfvars and update with your values
+
+# ================================
+# Basic Configuration
+# ================================
+project_name    = "youlend"
+environment     = "production"
+
+# ================================
+# AWS Configuration
+# ================================
+aws_region      = "us-east-1"
+aws_account_id  = "YOUR_AWS_ACCOUNT_ID_HERE"  # Replace with your 12-digit AWS Account ID
+
+# ================================
+# VPC Configuration
+# ================================
+vpc_cidr = "10.0.0.0/16"
+availability_zones = [
+  "us-east-1a",
+  "us-east-1b", 
+  "us-east-1c"
+]
+
+public_subnet_cidrs = [
+  "10.0.1.0/24",
+  "10.0.2.0/24",
+  "10.0.3.0/24"
+]
+
+private_subnet_cidrs = [
+  "10.0.10.0/24",
+  "10.0.11.0/24",
+  "10.0.12.0/24"
+]
+
+# ================================
+# NAT Gateway Configuration
+# ================================
+enable_nat_gateway = true
+single_nat_gateway = false  # Set to true for cost savings in dev/test
+
+# ================================
+# EKS Configuration
+# ================================
+cluster_version = "1.28"
+
+# Node group configuration
+node_instance_types = ["t3.medium"]
+node_desired_size   = 3
+node_min_size       = 3
+node_max_size       = 10
+node_disk_size      = 50
+
+# ================================
+# ECR Configuration
+# ================================
+ecr_repositories = [
+  "youlend-backend",
+  "youlend-frontend"
+]
+
+ecr_image_tag_mutability   = "MUTABLE"
+ecr_scan_on_push          = true
+ecr_lifecycle_policy_count = 10
+
+# ================================
+# Additional Tags
+# ================================
+additional_tags = {
+  Owner       = "Abdul Hafiz Yishawu"
+  CostCenter  = "Engineering"
+  Project     = "YouLend Platform"
+}
+
+# Instructions:
+# 1. Copy this file: cp terraform.tfvars.template terraform.tfvars
+# 2. Replace YOUR_AWS_ACCOUNT_ID_HERE with your AWS Account ID
+# 3. Adjust other values as needed for your environment
+# 4. Run: terraform plan

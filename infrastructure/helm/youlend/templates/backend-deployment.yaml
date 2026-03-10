@@ -1,0 +1,93 @@
+{{- if .Values.backend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: {{ include "youlend.namespace" . }}
+  labels:
+    {{- include "youlend.backend.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      {{- include "youlend.backend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "youlend.backend.selectorLabels" . | nindent 8 }}
+        version: {{ .Values.backend.image.tag | quote }}
+      {{- if .Values.monitoring.prometheus.enabled }}
+      annotations:
+        prometheus.io/scrape: "{{ .Values.monitoring.prometheus.scrape }}"
+        prometheus.io/port: "{{ .Values.monitoring.prometheus.port }}"
+        prometheus.io/path: "{{ .Values.monitoring.prometheus.path }}"
+      {{- end }}
+    spec:
+      securityContext:
+        runAsNonRoot: {{ .Values.backend.securityContext.runAsNonRoot }}
+        runAsUser: {{ .Values.backend.securityContext.runAsUser }}
+        fsGroup: {{ .Values.backend.securityContext.fsGroup }}
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: backend
+        image: {{ include "youlend.backend.image" . }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.backend.service.targetPort }}
+          protocol: TCP
+        env:
+        {{- range $key, $value := .Values.backend.env }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
+        envFrom:
+        - configMapRef:
+            name: backend-config
+        resources:
+          {{- toYaml .Values.backend.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.backend.health.livenessProbe.path }}
+            port: {{ .Values.backend.service.targetPort }}
+          initialDelaySeconds: {{ .Values.backend.health.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.backend.health.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.backend.health.livenessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.backend.health.livenessProbe.failureThreshold }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.backend.health.readinessProbe.path }}
+            port: {{ .Values.backend.service.targetPort }}
+          initialDelaySeconds: {{ .Values.backend.health.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.backend.health.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.backend.health.readinessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.backend.health.readinessProbe.failureThreshold }}
+        securityContext:
+          allowPrivilegeEscalation: {{ .Values.backend.securityContext.allowPrivilegeEscalation }}
+          readOnlyRootFilesystem: {{ .Values.backend.securityContext.readOnlyRootFilesystem }}
+          runAsNonRoot: {{ .Values.backend.securityContext.runAsNonRoot }}
+          runAsUser: {{ .Values.backend.securityContext.runAsUser }}
+          capabilities:
+            drop:
+              {{- toYaml .Values.backend.securityContext.capabilities.drop | nindent 14 }}
+      {{- if .Values.affinity.podAntiAffinity.enabled }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: {{ .Values.affinity.podAntiAffinity.weight }}
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - backend
+              topologyKey: kubernetes.io/hostname
+      {{- end }}
+{{- end }}
