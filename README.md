@@ -294,7 +294,7 @@ See GitHub Actions workflows in [.github/workflows/](.github/workflows/)
 
 ## License
 
-This project is proprietary software owned by YouLend.
+This project was created by Abdul Hafiz Yishawu as a technical assessment for YouLend's Platform Engineer position. All code and documentation are the original work of the author.
 
 ## Documentation
 
