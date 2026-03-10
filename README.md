@@ -29,6 +29,12 @@ A comprehensive loan management system with a .NET backend API, Angular frontend
                          │
                          ▼
                   ┌──────────────┐
+                  │  Route 53    │
+                  │     DNS      │
+                  └──────┬───────┘
+                         │
+                         ▼
+                  ┌──────────────┐
                   │   AWS ALB    │
                   │   (HTTPS)    │
                   └──────┬───────┘
@@ -52,10 +58,11 @@ A comprehensive loan management system with a .NET backend API, Angular frontend
 ```
 
 **Infrastructure:**
+- Route 53 for DNS management (youlend.certifiles.com)
 - VPC with 3 AZs, public + private subnets
 - EKS cluster (v1.28) with managed node groups
 - ECR for container images
-- ALB for internet exposure
+- ALB for internet exposure with SSL/TLS termination
 - Prometheus + Grafana + Loki for observability
 
 See [ARCHITECTURE.md](documentation/ARCHITECTURE.md) for detailed architecture.

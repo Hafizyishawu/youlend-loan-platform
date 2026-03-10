@@ -39,9 +39,17 @@ The YouLend Loan Management Platform is a cloud-native, microservices-based appl
 │                         Internet Users                           │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
-                            │ HTTPS (443)
+                            │ DNS Query (youlend.certifiles.com)
                             │
                             ▼
+                     ┌─────────────────┐
+                     │    Route 53     │
+                     │  DNS Resolution │
+                     └─────────┬───────┘
+                               │
+                               │ HTTPS (443)
+                               │
+                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                         AWS Cloud                                │
 │  ┌───────────────────────────────────────────────────────────┐  │
@@ -216,28 +224,31 @@ EKS Cluster (youlend-eks)
 ### User Request Flow
 
 ```
-1. User accesses https://youlend.example.com
+1. User accesses https://youlend.certifiles.com
    │
    ▼
-2. ALB terminates HTTPS, routes to Frontend pods
+2. Route 53 resolves DNS to ALB endpoint
    │
    ▼
-3. Frontend serves Angular SPA
+3. ALB terminates HTTPS, routes to Frontend pods
    │
    ▼
-4. User authenticates via Auth0 (OIDC)
+4. Frontend serves Angular SPA
    │
    ▼
-5. Frontend calls Backend API with JWT token
+5. User authenticates via Auth0 (OIDC)
    │
    ▼
-6. Backend validates JWT, processes request
+6. Frontend calls Backend API with JWT token
    │
    ▼
-7. Backend returns JSON response
+7. Backend validates JWT, processes request
    │
    ▼
-8. Frontend updates UI
+8. Backend returns JSON response
+   │
+   ▼
+9. Frontend updates UI
 ```
 
 ### CI/CD Flow
