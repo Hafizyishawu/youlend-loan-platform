@@ -104,7 +104,8 @@ dotnet run
 dotnet test
 ```
 
-API available at: http://localhost:8080
+API available at: http://localhost:8080  
+**Swagger Documentation:** http://localhost:8080/swagger (Development mode)
 
 **Frontend:**
 ```bash
@@ -302,7 +303,7 @@ This project is proprietary software owned by YouLend.
 - [Security Documentation](documentation/SECURITY.md)
 - [Testing Guide](documentation/TESTING.md)
 - [Infrastructure Documentation](documentation/infrastructure/)
-- [API Documentation](http://localhost:8080/swagger) (when running)
+- [API Documentation](documentation/API.md)
 
 ## Support
 

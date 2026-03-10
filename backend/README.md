@@ -45,7 +45,7 @@ dotnet run
 ```
 
 API available at: `https://localhost:5001`
-Swagger UI: `https://localhost:5001` (root)
+**Swagger UI:** http://localhost:8080/swagger (Development mode only)
 
 ### Run Tests
 
