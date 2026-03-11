@@ -29,10 +29,16 @@ public class RequestLoggingMiddleware
 
         var stopwatch = Stopwatch.StartNew();
 
+        // Sanitize path to prevent log injection
+        var safePath = context.Request.Path.ToString()  
+            .Replace("\r", string.Empty)
+            .Replace("\n", string.Empty)
+            .Replace("\t", string.Empty);
+
         _logger.LogInformation(
             "HTTP {Method} {Path} started. CorrelationId: {CorrelationId}",
             context.Request.Method,
-            context.Request.Path,
+            safePath,
             correlationId);
 
         try
@@ -46,7 +52,7 @@ public class RequestLoggingMiddleware
             _logger.LogInformation(
                 "HTTP {Method} {Path} completed with {StatusCode} in {ElapsedMilliseconds}ms. CorrelationId: {CorrelationId}",
                 context.Request.Method,
-                context.Request.Path,
+                safePath,
                 context.Response.StatusCode,
                 stopwatch.ElapsedMilliseconds,
                 correlationId);

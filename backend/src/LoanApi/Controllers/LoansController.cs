@@ -33,7 +33,13 @@ public class LoansController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<LoanResponse>> CreateLoan([FromBody] CreateLoanRequest request)
     {
-        _logger.LogInformation("Creating new loan for borrower: {BorrowerName}", request.BorrowerName);
+        // FIX: Sanitize borrower name before logging
+        var safeBorrowerName = request.BorrowerName
+            .Replace("\r", string.Empty)
+            .Replace("\n", string.Empty)
+            .Replace("\t", string.Empty);
+
+        _logger.LogInformation("Creating new loan for borrower: {BorrowerName}", safeBorrowerName);
 
         var loan = await _loanService.CreateLoanAsync(request);
 
@@ -118,12 +124,17 @@ public class LoansController : ControllerBase
             });
         }
 
-        _logger.LogInformation("Searching loans for borrower: {BorrowerName}", borrowerName);
+        var safeBorrowerName = borrowerName
+            .Replace("\r", string.Empty)
+            .Replace("\n", string.Empty)
+            .Replace("\t", string.Empty);  // FIX: Added tab sanitization
+
+        _logger.LogInformation("Searching loans for borrower: {BorrowerName}", safeBorrowerName);
 
         var loans = await _loanService.GetLoansByBorrowerNameAsync(borrowerName);
-
+        
         _logger.LogInformation("Found {Count} loans for borrower: {BorrowerName}",
-            loans.Count(), borrowerName);
+            loans.Count(), safeBorrowerName);
 
         return Ok(loans);
     }
