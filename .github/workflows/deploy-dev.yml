@@ -3,7 +3,8 @@ name: Deploy to Development
 on:
   push:
     branches:
-      - main
+      - master
+      - develop
     paths:
       - 'backend/**'
       - 'frontend/**'
