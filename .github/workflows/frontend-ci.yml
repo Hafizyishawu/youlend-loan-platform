@@ -37,11 +37,9 @@ jobs:
       
       - name: Create environment files from template
         run: |
-          # Create both environment.ts and environment.prod.ts
           cp src/environments/environment.template.ts src/environments/environment.ts
           cp src/environments/environment.template.ts src/environments/environment.prod.ts
           
-          # Replace placeholders in both files
           sed -i "s|\${API_URL}|${{ secrets.FRONTEND_API_URL || '/api/v1' }}|g" src/environments/environment.ts
           sed -i "s|\${AUTH0_DOMAIN}|${{ secrets.AUTH0_DOMAIN || 'placeholder.auth0.com' }}|g" src/environments/environment.ts
           sed -i "s|\${AUTH0_CLIENT_ID}|${{ secrets.AUTH0_CLIENT_ID || 'placeholder' }}|g" src/environments/environment.ts
@@ -103,11 +101,9 @@ jobs:
       
       - name: Create environment files from template
         run: |
-          # Create both environment.ts and environment.prod.ts
           cp src/environments/environment.template.ts src/environments/environment.ts
           cp src/environments/environment.template.ts src/environments/environment.prod.ts
           
-          # Replace placeholders
           sed -i "s|\${API_URL}|/api/v1|g" src/environments/environment.ts
           sed -i "s|\${AUTH0_DOMAIN}|placeholder.auth0.com|g" src/environments/environment.ts
           sed -i "s|\${AUTH0_CLIENT_ID}|placeholder|g" src/environments/environment.ts
@@ -118,17 +114,66 @@ jobs:
           sed -i "s|\${AUTH0_CLIENT_ID}|placeholder|g" src/environments/environment.prod.ts
           sed -i "s|\${REDIRECT_URI}|http://localhost:4200/callback|g" src/environments/environment.prod.ts
       
-      - name: Build
-        run: npm run build -- --configuration production --stats-json
+      - name: Build production bundle
+        run: npm run build -- --configuration production
       
-      - name: Analyze bundle
+      - name: Analyze bundle size
         run: |
-          npx webpack-bundle-analyzer dist/stats.json --mode static --report bundle-report.html --no-open
-        continue-on-error: true
+          echo "# Bundle Size Analysis" > bundle-report.md
+          echo "" >> bundle-report.md
+          echo "**Build Date:** $(date -u)" >> bundle-report.md
+          echo "**Angular Version:** 17" >> bundle-report.md
+          echo "**Build Tool:** esbuild" >> bundle-report.md
+          echo "" >> bundle-report.md
+          
+          echo "## JavaScript Bundles" >> bundle-report.md
+          echo "" >> bundle-report.md
+          echo "\`\`\`" >> bundle-report.md
+          ls -lh dist/youlend-loan-frontend/browser/*.js 2>/dev/null | awk '{printf "%-40s %10s\n", $9, $5}' >> bundle-report.md || echo "No JS bundles found" >> bundle-report.md
+          echo "\`\`\`" >> bundle-report.md
+          echo "" >> bundle-report.md
+          
+          echo "## CSS Bundles" >> bundle-report.md
+          echo "" >> bundle-report.md
+          echo "\`\`\`" >> bundle-report.md
+          ls -lh dist/youlend-loan-frontend/browser/*.css 2>/dev/null | awk '{printf "%-40s %10s\n", $9, $5}' >> bundle-report.md || echo "No CSS bundles found" >> bundle-report.md
+          echo "\`\`\`" >> bundle-report.md
+          echo "" >> bundle-report.md
+          
+          echo "## Total Bundle Size" >> bundle-report.md
+          echo "" >> bundle-report.md
+          TOTAL_SIZE=$(du -sh dist/youlend-loan-frontend/browser 2>/dev/null | awk '{print $1}')
+          echo "**Total:** $TOTAL_SIZE" >> bundle-report.md
+          echo "" >> bundle-report.md
+          
+          echo "## Optimization Status" >> bundle-report.md
+          echo "" >> bundle-report.md
+          echo "- Production build with optimization enabled" >> bundle-report.md
+          echo "- Tree-shaking applied via esbuild" >> bundle-report.md
+          echo "- Minification enabled" >> bundle-report.md
+          echo "- Dead code elimination" >> bundle-report.md
+          
+          cat bundle-report.md
       
-      - name: Upload bundle analysis
+      - name: Upload bundle report
         uses: actions/upload-artifact@v4
         with:
           name: bundle-analysis
-          path: frontend/bundle-report.html
+          path: frontend/bundle-report.md
+        continue-on-error: true
+      
+      - name: Comment bundle size on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('frontend/bundle-report.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
         continue-on-error: true
