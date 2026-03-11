@@ -3,10 +3,12 @@ name: Security Scan
 on:
   pull_request:
     branches:
-      - main
+      - master
+      - develop
   push:
     branches:
-      - main
+      - master
+      - develop
   schedule:
     # Run daily at 2 AM UTC
     - cron: '0 2 * * *'
