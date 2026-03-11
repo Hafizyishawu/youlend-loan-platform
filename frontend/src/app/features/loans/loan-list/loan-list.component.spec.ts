@@ -3,6 +3,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { ActivatedRoute } from '@angular/router';
 import { LoanListComponent } from './loan-list.component';
 import { LoanService } from '../../../core/services/loan.service';
 import { of } from 'rxjs';
@@ -24,7 +25,18 @@ describe('LoanListComponent', () => {
         NoopAnimationsModule
       ],
       providers: [
-        { provide: LoanService, useValue: loanServiceSpy }
+        { provide: LoanService, useValue: loanServiceSpy },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            params: of({}),
+            queryParams: of({}),
+            snapshot: {
+              params: {},
+              queryParams: {}
+            }
+          }
+        }
       ]
     }).compileComponents();
 

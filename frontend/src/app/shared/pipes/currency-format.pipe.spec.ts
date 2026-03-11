@@ -30,5 +30,4 @@ describe('CurrencyFormatPipe', () => {
   it('should handle undefined', () => {
     expect(pipe.transform(undefined)).toBe('£0.00');
   });
-}
-);
+});

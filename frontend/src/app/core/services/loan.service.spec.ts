@@ -2,12 +2,11 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { LoanService } from './loan.service';
 import { Loan, CreateLoanRequest, UpdateLoanRequest } from '../models/loan.model';
-import { environment } from '../../../environments/environment';
 
 describe('LoanService', () => {
   let service: LoanService;
   let httpMock: HttpTestingController;
-  const apiUrl = `${environment.apiUrl}/loans`;
+  const apiUrl = '/api/v1/loans'; // Use hardcoded API URL for tests
 
   beforeEach(() => {
     TestBed.configureTestingModule({
