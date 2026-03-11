@@ -29,6 +29,15 @@ on:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
+      # Frontend environment secrets
+      FRONTEND_API_URL:
+        required: false
+      AUTH0_DOMAIN:
+        required: false
+      AUTH0_CLIENT_ID:
+        required: false
+      FRONTEND_REDIRECT_URI:
+        required: false
 
 jobs:
   build-and-push:
@@ -78,6 +87,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+          # Add build args for frontend
+          build-args: |
+            API_URL=${{ secrets.FRONTEND_API_URL }}
+            AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }}
+            AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }}
+            REDIRECT_URI=${{ secrets.FRONTEND_REDIRECT_URI }}
       
       - name: Image digest
         run: echo "Image pushed with tags ${{ steps.meta.outputs.tags }}"
