@@ -33,7 +33,7 @@ RUN cp src/environments/environment.template.ts src/environments/environment.ts 
 RUN npm run build -- --configuration production
 
 # Stage 2: Serve with Nginx
-FROM nginx:alpine3.24
+FROM nginx:stable-alpine
 
 # Copy custom nginx config
 COPY nginx.conf /etc/nginx/nginx.conf
