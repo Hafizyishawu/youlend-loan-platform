@@ -1,5 +1,5 @@
 # Stage 1: Build Angular application
-FROM node:20-alpine AS build
+FROM node:20-alpine3.24 AS build
 
 WORKDIR /app
 
@@ -33,7 +33,7 @@ RUN cp src/environments/environment.template.ts src/environments/environment.ts 
 RUN npm run build -- --configuration production
 
 # Stage 2: Serve with Nginx
-FROM nginx:alpine
+FROM nginx:alpine3.24
 
 # Copy custom nginx config
 COPY nginx.conf /etc/nginx/nginx.conf

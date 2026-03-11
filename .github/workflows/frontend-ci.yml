@@ -35,6 +35,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
+      - name: Create environment files from template
+        run: |
+          # Create both environment.ts and environment.prod.ts
+          cp src/environments/environment.template.ts src/environments/environment.ts
+          cp src/environments/environment.template.ts src/environments/environment.prod.ts
+          
+          # Replace placeholders in both files
+          sed -i "s|\${API_URL}|${{ secrets.FRONTEND_API_URL || '/api/v1' }}|g" src/environments/environment.ts
+          sed -i "s|\${AUTH0_DOMAIN}|${{ secrets.AUTH0_DOMAIN || 'placeholder.auth0.com' }}|g" src/environments/environment.ts
+          sed -i "s|\${AUTH0_CLIENT_ID}|${{ secrets.AUTH0_CLIENT_ID || 'placeholder' }}|g" src/environments/environment.ts
+          sed -i "s|\${REDIRECT_URI}|${{ secrets.FRONTEND_REDIRECT_URI || 'http://localhost:4200/callback' }}|g" src/environments/environment.ts
+          
+          sed -i "s|\${API_URL}|${{ secrets.FRONTEND_API_URL || '/api/v1' }}|g" src/environments/environment.prod.ts
+          sed -i "s|\${AUTH0_DOMAIN}|${{ secrets.AUTH0_DOMAIN || 'placeholder.auth0.com' }}|g" src/environments/environment.prod.ts
+          sed -i "s|\${AUTH0_CLIENT_ID}|${{ secrets.AUTH0_CLIENT_ID || 'placeholder' }}|g" src/environments/environment.prod.ts
+          sed -i "s|\${REDIRECT_URI}|${{ secrets.FRONTEND_REDIRECT_URI || 'http://localhost:4200/callback' }}|g" src/environments/environment.prod.ts
+      
       - name: Lint
         run: npm run lint
         continue-on-error: true
@@ -42,23 +59,6 @@ jobs:
       - name: Run tests
         run: npm test -- --watch=false --code-coverage --browsers=ChromeHeadless
       
-      - name: Create production environment file
-        run: |
-          cat > src/environments/environment.prod.template.ts << EOF
-          export const environment = {
-            production: true,
-            demoMode: false,
-            apiUrl: '${{ secrets.FRONTEND_API_URL }}',
-            auth0: {
-              domain: '${{ secrets.AUTH0_DOMAIN }}',
-              clientId: '${{ secrets.AUTH0_CLIENT_ID }}',
-              authorizationParams: {
-                redirect_uri: '${{ secrets.FRONTEND_REDIRECT_URI }}'
-              }
-            }
-          };
-          EOF
-
       - name: Build
         run: npm run build -- --configuration production
       
@@ -100,6 +100,23 @@ jobs:
       
       - name: Install dependencies
         run: npm ci
+      
+      - name: Create environment files from template
+        run: |
+          # Create both environment.ts and environment.prod.ts
+          cp src/environments/environment.template.ts src/environments/environment.ts
+          cp src/environments/environment.template.ts src/environments/environment.prod.ts
+          
+          # Replace placeholders
+          sed -i "s|\${API_URL}|/api/v1|g" src/environments/environment.ts
+          sed -i "s|\${AUTH0_DOMAIN}|placeholder.auth0.com|g" src/environments/environment.ts
+          sed -i "s|\${AUTH0_CLIENT_ID}|placeholder|g" src/environments/environment.ts
+          sed -i "s|\${REDIRECT_URI}|http://localhost:4200/callback|g" src/environments/environment.ts
+          
+          sed -i "s|\${API_URL}|/api/v1|g" src/environments/environment.prod.ts
+          sed -i "s|\${AUTH0_DOMAIN}|placeholder.auth0.com|g" src/environments/environment.prod.ts
+          sed -i "s|\${AUTH0_CLIENT_ID}|placeholder|g" src/environments/environment.prod.ts
+          sed -i "s|\${REDIRECT_URI}|http://localhost:4200/callback|g" src/environments/environment.prod.ts
       
       - name: Build
         run: npm run build -- --configuration production --stats-json
