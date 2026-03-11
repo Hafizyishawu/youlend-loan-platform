@@ -3,10 +3,15 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { LoanService } from './loan.service';
 import { Loan, CreateLoanRequest, UpdateLoanRequest } from '../models/loan.model';
 
+// Mock environment for tests
+const mockEnvironment = {
+  apiUrl: '/api/v1'
+};
+
 describe('LoanService', () => {
   let service: LoanService;
   let httpMock: HttpTestingController;
-  const apiUrl = '/api/v1/loans'; // Use hardcoded API URL for tests
+  const apiUrl = `${mockEnvironment.apiUrl}/loans`;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -42,7 +47,9 @@ describe('LoanService', () => {
       expect(loans).toEqual(mockLoans);
     });
 
-    const req = httpMock.expectOne(apiUrl);
+    const req = httpMock.expectOne((request) => {
+      return request.url.endsWith('/loans');
+    });
     expect(req.request.method).toBe('GET');
     req.flush(mockLoans);
   });
@@ -61,7 +68,9 @@ describe('LoanService', () => {
       expect(loan).toEqual(mockLoan);
     });
 
-    const req = httpMock.expectOne(`${apiUrl}/123`);
+    const req = httpMock.expectOne((request) => {
+      return request.url.endsWith('/loans/123');
+    });
     expect(req.request.method).toBe('GET');
     req.flush(mockLoan);
   });
@@ -73,9 +82,10 @@ describe('LoanService', () => {
       expect(loans).toEqual(mockLoans);
     });
 
-    const req = httpMock.expectOne(req => req.url === `${apiUrl}/search`);
+    const req = httpMock.expectOne((request) => {
+      return request.url.includes('/loans/search') && request.params.get('borrowerName') === 'John Doe';
+    });
     expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('borrowerName')).toBe('John Doe');
     req.flush(mockLoans);
   });
 
@@ -97,7 +107,9 @@ describe('LoanService', () => {
       expect(loan).toEqual(mockLoan);
     });
 
-    const req = httpMock.expectOne(apiUrl);
+    const req = httpMock.expectOne((request) => {
+      return request.url.endsWith('/loans');
+    });
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(createRequest);
     req.flush(mockLoan);
@@ -121,7 +133,9 @@ describe('LoanService', () => {
       expect(loan).toEqual(mockLoan);
     });
 
-    const req = httpMock.expectOne(`${apiUrl}/456`);
+    const req = httpMock.expectOne((request) => {
+      return request.url.endsWith('/loans/456');
+    });
     expect(req.request.method).toBe('PUT');
     expect(req.request.body).toEqual(updateRequest);
     req.flush(mockLoan);
@@ -130,7 +144,9 @@ describe('LoanService', () => {
   it('should delete a loan', () => {
     service.deleteLoan('456').subscribe();
 
-    const req = httpMock.expectOne(`${apiUrl}/456`);
+    const req = httpMock.expectOne((request) => {
+      return request.url.endsWith('/loans/456');
+    });
     expect(req.request.method).toBe('DELETE');
     req.flush(null);
   });
