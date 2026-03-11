@@ -16,8 +16,14 @@ ARG AUTH0_DOMAIN
 ARG AUTH0_CLIENT_ID
 ARG REDIRECT_URI
 
-# Create production environment from template
-RUN cp src/environments/environment.template.ts src/environments/environment.prod.ts && \
+# Create both environment.ts and environment.prod.ts from template
+# Production build will replace environment.ts with environment.prod.ts
+RUN cp src/environments/environment.template.ts src/environments/environment.ts && \
+    cp src/environments/environment.template.ts src/environments/environment.prod.ts && \
+    sed -i "s|\${API_URL}|${API_URL}|g" src/environments/environment.ts && \
+    sed -i "s|\${AUTH0_DOMAIN}|${AUTH0_DOMAIN}|g" src/environments/environment.ts && \
+    sed -i "s|\${AUTH0_CLIENT_ID}|${AUTH0_CLIENT_ID}|g" src/environments/environment.ts && \
+    sed -i "s|\${REDIRECT_URI}|${REDIRECT_URI}|g" src/environments/environment.ts && \
     sed -i "s|\${API_URL}|${API_URL}|g" src/environments/environment.prod.ts && \
     sed -i "s|\${AUTH0_DOMAIN}|${AUTH0_DOMAIN}|g" src/environments/environment.prod.ts && \
     sed -i "s|\${AUTH0_CLIENT_ID}|${AUTH0_CLIENT_ID}|g" src/environments/environment.prod.ts && \
