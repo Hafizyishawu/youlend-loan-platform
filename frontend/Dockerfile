@@ -3,15 +3,8 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-RUN npm ci
-
-# Copy source code
-COPY . .
-
-# Upgrade zlib to ensure we have the patched version
-RUN apk update && apk upgrade zlib
+# Upgrade all packages including libexpat fix (CVE-2026-32767)
+RUN apk update && apk upgrade --no-cache
 
 # Build arguments for environment configuration
 ARG API_URL
@@ -19,7 +12,14 @@ ARG AUTH0_DOMAIN
 ARG AUTH0_CLIENT_ID
 ARG REDIRECT_URI
 
-# Create both environment.ts and environment.prod.ts from template
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Create environment files from template
 RUN cp src/environments/environment.template.ts src/environments/environment.ts && \
     cp src/environments/environment.template.ts src/environments/environment.prod.ts && \
     sed -i "s|\${API_URL}|${API_URL}|g" src/environments/environment.ts && \
@@ -37,8 +37,8 @@ RUN npm run build -- --configuration production
 # Stage 2: Serve with Nginx
 FROM nginx:stable-alpine
 
-# Upgrade zlib to patched version
-RUN apk update && apk upgrade zlib
+# Upgrade all packages including libexpat fix (CVE-2026-32767)
+RUN apk update && apk upgrade --no-cache
 
 # Copy custom nginx config
 COPY nginx.conf /etc/nginx/nginx.conf
