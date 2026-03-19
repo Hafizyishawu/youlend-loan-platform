@@ -14,9 +14,17 @@ on:
         required: false
         type: string
 
+permissions:
+  id-token: write
+  contents: read
+
+
 jobs:
   build-backend:
     name: Build Backend Image
+    permissions:
+      id-token: write
+      contents: read
     uses: ./.github/workflows/reusable-docker-build.yml
     secrets: inherit
     with:
@@ -28,6 +36,9 @@ jobs:
 
   build-frontend:
     name: Build Frontend Image
+    permissions:
+      id-token: write
+      contents: read
     uses: ./.github/workflows/reusable-docker-build.yml
     secrets: inherit
     with:
@@ -174,7 +185,7 @@ jobs:
       
       - name: Create deployment summary
         run: |
-          echo "## 🚀 Production Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Production Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${{ inputs.version || github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "**Deployed by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
@@ -197,7 +208,7 @@ jobs:
           echo "::error::Production deployment failed. Initiating rollback..."
           helm rollback youlend-loan-platform -n youlend --wait --timeout=10m || true
           
-          echo "## ⚠️ Deployment Failed - Rollback Initiated" >> $GITHUB_STEP_SUMMARY
+          echo "## Deployment Failed - Rollback Initiated" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "The deployment was automatically rolled back to the previous version." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

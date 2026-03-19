@@ -3,7 +3,7 @@ name: Deploy to EKS
 on:
   push:
     branches:
-      - master
+      - develop
     paths:
       - 'backend/**'
       - 'frontend/**'
