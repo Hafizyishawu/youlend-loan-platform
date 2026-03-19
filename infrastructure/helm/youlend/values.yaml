@@ -186,7 +186,13 @@ networkPolicy:
     - Egress
 
 # Secrets configuration
-# Removed - Auth0 config injected at frontend build time via GitHub Secrets
+# Auth0 configuration (not actually used by deployments, just for NOTES.txt template)
+secrets:
+  createKubernetesSecret: false  # Don't create unused K8s secret
+  auth0:
+    domain: "youlend-assessment.uk.auth0.com"
+    clientId: "anN4lDPIeRAqA15nZszNupl8PFw6Clac"
+    audience: "https://youlend.certifiles.com/api"
 
 # Monitoring
 monitoring:
