@@ -1,12 +1,12 @@
 export const environment = {
-  production: false,
-  demoMode: false, // Set to true to run without Auth0
-  apiUrl: 'http://localhost:5001/api/v1',
+  production: true,
+  demoMode: false,
+  apiUrl: '${API_URL}',
   auth0: {
-    domain: 'YOUR_AUTH0_DOMAIN_HERE',  // Replace with your Auth0 domain (e.g., 'dev-abc123.us.auth0.com')
-    clientId: 'YOUR_AUTH0_CLIENT_ID_HERE',  // Replace with your Auth0 client ID
+    domain: '${AUTH0_DOMAIN}',
+    clientId: '${AUTH0_CLIENT_ID}',
     authorizationParams: {
-      redirect_uri: 'http://localhost:4200/callback',  
+      redirect_uri: '${REDIRECT_URI}'
     }
   }
 };
