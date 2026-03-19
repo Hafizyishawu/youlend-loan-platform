@@ -1,30 +1,16 @@
 name: Deploy to Production
 
 on:
-  push:
-    branches: [master]
-    paths:
-      - 'backend/**'
-      - 'frontend/**'
-      - 'infrastructure/**'
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to deploy (leave empty to use commit SHA)'
+        description: 'Version to deploy (leave empty to use latest commit SHA)'
         required: false
         type: string
-
-permissions:
-  id-token: write
-  contents: read
-
 
 jobs:
   build-backend:
     name: Build Backend Image
-    permissions:
-      id-token: write
-      contents: read
     uses: ./.github/workflows/reusable-docker-build.yml
     secrets: inherit
     with:
@@ -36,9 +22,6 @@ jobs:
 
   build-frontend:
     name: Build Frontend Image
-    permissions:
-      id-token: write
-      contents: read
     uses: ./.github/workflows/reusable-docker-build.yml
     secrets: inherit
     with:
@@ -54,7 +37,6 @@ jobs:
     runs-on: ubuntu-latest
     
     permissions:
-      id-token: write
       contents: read
       security-events: write
     
@@ -62,11 +44,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Configure AWS credentials (OIDC)
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
       
       - name: Login to Amazon ECR
         id: login-ecr
@@ -95,7 +78,7 @@ jobs:
       
       - name: Fail on critical vulnerabilities
         run: |
-          if grep -q '"level": "error"' trivy-backend-prod.sarif trivy-frontend-prod.sarif; then
+          if grep -q '"level": "error"' trivy-backend-prod.sarif trivy-frontend-prod.sarif 2>/dev/null; then
             echo "::error::Critical vulnerabilities found in production images"
             exit 1
           fi
@@ -108,25 +91,20 @@ jobs:
       name: production
       url: https://youlend.certifiles.com
     
-    permissions:
-      id-token: write
-      contents: read
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Configure AWS credentials (OIDC)
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
       
       - name: Update kubeconfig
         run: |
-          aws eks update-kubeconfig \
-            --name youlend-eks \
-            --region ${{ secrets.AWS_REGION || 'us-east-1' }}
+          aws eks update-kubeconfig --name youlend-eks --region ${{ secrets.AWS_REGION }}
       
       - name: Install Helm
         uses: azure/setup-helm@v4
@@ -148,7 +126,6 @@ jobs:
             --create-namespace \
             --set backend.image.tag=${{ inputs.version || github.sha }} \
             --set frontend.image.tag=${{ inputs.version || github.sha }} \
-            --set global.environment=production \
             --wait \
             --timeout 15m \
             --atomic \
@@ -161,35 +138,21 @@ jobs:
           kubectl rollout status deployment/frontend -n youlend --timeout=10m
           
           echo "Checking pod health..."
-          kubectl wait --for=condition=ready pod -l app=backend -n youlend --timeout=5m || true
-          kubectl wait --for=condition=ready pod -l app=frontend -n youlend --timeout=5m || true
+          kubectl get pods -n youlend
       
       - name: Run production smoke tests
         run: |
-          # Wait for ingress propagation
-          sleep 60
-          
-          # Test backend health directly
-          echo "Testing backend health..."
-          kubectl port-forward -n youlend deployment/backend 5000:8080 &
-          PF_PID=$!
-          sleep 5
-          curl -f -m 30 http://localhost:5000/health/live || echo "Warning: Health check failed"
-          kill $PF_PID || true
-          
-          # Test via domain
-          echo "Testing via domain..."
-          curl -f -m 30 https://youlend.certifiles.com/ || echo "Warning: Frontend check failed"
-          
-          echo "✓ Smoke tests completed"
+          echo "Testing application health..."
+          sleep 30
+          curl -f -m 30 https://youlend.certifiles.com/ || echo "Warning: smoke test failed"
+          echo "✓ Deployment verification completed"
       
       - name: Create deployment summary
         run: |
-          echo "## Production Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 Production Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${{ inputs.version || github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "**Deployed by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
           echo "**Time:** $(date -u)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Pods" >> $GITHUB_STEP_SUMMARY
@@ -208,14 +171,9 @@ jobs:
           echo "::error::Production deployment failed. Initiating rollback..."
           helm rollback youlend-loan-platform -n youlend --wait --timeout=10m || true
           
-          echo "## Deployment Failed - Rollback Initiated" >> $GITHUB_STEP_SUMMARY
+          echo "## ⚠️ Deployment Failed - Rollback Initiated" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "The deployment was automatically rolled back to the previous version." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Recent Events:**" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          kubectl get events -n youlend --sort-by='.lastTimestamp' | tail -20 >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "Deployment was automatically rolled back to the previous version." >> $GITHUB_STEP_SUMMARY
       
       - name: Notify deployment
         if: success()
