@@ -8,7 +8,7 @@ global:
 
 # Image registry configuration
 image:
-  registry: YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
+  registry: 689393245150.dkr.ecr.us-east-1.amazonaws.com
   pullPolicy: Always
   # Optionally specify imagePullSecrets
   # pullSecrets:
@@ -19,7 +19,7 @@ backend:
   enabled: true
   
   image:
-    repository: YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/youlend-backend
+    repository: 689393245150.dkr.ecr.us-east-1.amazonaws.com/youlend-backend
     tag: latest
   
   replicaCount: 1
@@ -64,7 +64,7 @@ backend:
   
   config:
     allowedHosts: "*"
-    corsOrigins: "https://youlend.example.com"
+    corsOrigins: "https://youlend.certifiles.com"
     serilog:
       minimumLevel: Information
   
@@ -87,7 +87,7 @@ frontend:
   enabled: true
   
   image:
-    repository: YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/youlend-frontend
+    repository: 689393245150.dkr.ecr.us-east-1.amazonaws.com/youlend-frontend
     tag: v3
   
   replicaCount: 3
@@ -149,8 +149,9 @@ ingress:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
     alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/healthcheck-path: /health/ready
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
-    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '15'
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
     alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
     alb.ingress.kubernetes.io/success-codes: '200'
     alb.ingress.kubernetes.io/healthy-threshold-count: '2'
@@ -158,14 +159,13 @@ ingress:
     alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=60,deletion_protection.enabled=false,http2.enabled=true
     alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds=30,stickiness.enabled=true,stickiness.lb_cookie.duration_seconds=86400
     alb.ingress.kubernetes.io/tags: Environment=Production,Project=YouLend,ManagedBy=Kubernetes
-  
-  # Uncomment and set your ACM certificate ARN for HTTPS
-  # certificateArn: "arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/CERT_ID"
-  
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:689393245150:certificate/4186c842-fb6c-4664-bf3f-733672c15cce
+
+    
   hosts:
-    - host: ""  # Leave empty for ALB DNS, or set custom domain
+    - host: "youlend.certifiles.com"  # Leave empty for ALB DNS, or set custom domain
       paths:
-        - path: /api
+        - path: /api/v1
           pathType: Prefix
           backend: backend
         - path: /health
@@ -186,11 +186,7 @@ networkPolicy:
     - Egress
 
 # Secrets configuration
-secrets:
-  auth0:
-    domain: "YOUR_AUTH0_DOMAIN"
-    clientId: "YOUR_AUTH0_CLIENT_ID"
-    audience: "https://youlend-loan-api"
+# Removed - Auth0 config injected at frontend build time via GitHub Secrets
 
 # Monitoring
 monitoring:
